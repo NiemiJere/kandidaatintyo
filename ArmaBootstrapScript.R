@@ -8,7 +8,7 @@ beta <- c(0.02, -0.15, 0.5)
 # Generoidaan residuaalit
 k <- 1000
 
-create_initial_arma<-function(initial_values, a, b, res, len){
+create_initial_arma <- function(initial_values, a, b, res, len){
   time_series <- matrix(NA, nrow=k, ncol=1)
   time_series[1, 1] <- initial_values[1]
   time_series[2, 1] <- initial_values[2]
@@ -19,17 +19,17 @@ create_initial_arma<-function(initial_values, a, b, res, len){
       b[1] * res[i - 1] + b[2] * res[i - 2] + b[3] * res[i - 3] +
       res[i]
   }
-  return (time_series)
+  return(time_series)
 }
 
 shift <- function(values, shift_amount){
   result <- values-shift_amount
-  return (result)
+  return(result)
 }
 
 generate_gamma_distributed_residuals <- function(amount, shape, rate){
   gamma_random_numbers <- rgamma(amount, shape, rate)
-  return (shift(gamma_random_numbers, shape/rate))
+  return(shift(gamma_random_numbers, shape/rate))
 }
 
 # Gamma-jakauman parametrit
