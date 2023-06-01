@@ -22,8 +22,8 @@ create_initial_arma<-function(initial_values, a, b, res, len){
   return(time_series)
 }
 
-shift<-function(values, shift){
-  result<-values-shift
+shift<-function(values, shift_amount){
+  result<-values-shift_amount
   return(result)
 }
 
