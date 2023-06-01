@@ -123,6 +123,7 @@ for(i in 1:iteration_rounds){
   print(paste(round((i/iteration_rounds)*100),'% completed'))
 }
 
+print("Parameters with normally distributed residuals")
 print(times_within_bounds)
 
 
