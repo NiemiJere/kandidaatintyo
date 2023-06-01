@@ -50,7 +50,7 @@ data_uniform_distribution <- arima.sim(model=list(ar=alpha, ma=beta), n=k, innov
 
 data_normal_distribution <- create_initial_arma(rnorm(3), alpha, beta, normally_distributed_residuals, k)
 data_gamma_distribution <- create_initial_arma(generate_gamma_distributed_residuals(3, shape, rate), alpha, beta, gamma_distributed_residuals, k)
-data_uniformly_distribution <- create_initial_arma(runif(3, min=minimum, max=maximum), alpha, beta, uniformly_distributed_residuals, k)
+data_uniform_distribution <- create_initial_arma(runif(3, min=minimum, max=maximum), alpha, beta, uniformly_distributed_residuals, k)
 
 data <- data_normal_distribution
 
