@@ -8,20 +8,6 @@ beta<-c(0.02, -0.15, 0.5)
 # Generoidaan residuaalit
 k<-1000
 
-'create_initial_arma<-function(initial_values, a, b, res, len){
-  time_series<-matrix(NA,nrow=k,ncol=1)
-  time_series[1, 1]<-initial_values[1]
-  time_series[2, 1]<-initial_values[2]
-  time_series[3, 1]<-initial_values[3]
-  
-  for(i in 4:len){
-    time_series[i, 1]<-a[1] * time_series[i - 1] + a[2] * time_series[i - 1] + 
-      b[1] * res[i - 1] + b[2] * res[i - 2] + b[3] * res[i - 3] +
-      res[i]
-  }
-  return(time_series)
-}'
-
 shift<-function(values, shift){
   result<-values-shift
   return(result)
