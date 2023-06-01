@@ -8,6 +8,20 @@ beta<-c(0.02, -0.15, 0.5)
 # Generoidaan residuaalit
 k<-1000
 
+create_initial_arma<-function(initial_values, a, b, res, len){
+  time_series<-matrix(NA,nrow=k,ncol=1)
+  time_series[1, 1]<-initial_values[1]
+  time_series[2, 1]<-initial_values[2]
+  time_series[3, 1]<-initial_values[3]
+  
+  for(i in 4:len){
+    time_series[i, 1]<-a[1] * time_series[i - 1] + a[2] * time_series[i - 2] + 
+      b[1] * res[i - 1] + b[2] * res[i - 2] + b[3] * res[i - 3] +
+      res[i]
+  }
+  return(time_series)
+}
+
 shift<-function(values, shift){
   result<-values-shift
   return(result)
@@ -25,13 +39,13 @@ rate<-0.5
 normally_distributed_residuals<-rnorm(k)
 gamma_distributed_residuals<-generate_gamma_distributed_residuals(k, shape, rate)
 
-data_normal_distribution<-arima.sim(model=list(ar=alpha, ma=beta), n=k, innov=normally_distributed_residuals)
-data_gamma_distribution<-arima.sim(model=list(ar=alpha, ma=beta), n=k, innov=gamma_distributed_residuals)
+'data_normal_distribution<-arima.sim(model=list(ar=alpha, ma=beta), n=k, innov=normally_distributed_residuals)
+data_gamma_distribution<-arima.sim(model=list(ar=alpha, ma=beta), n=k, innov=gamma_distributed_residuals)'
 
+data_normal_distribution<-create_initial_arma(rnorm(3), alpha, beta, normally_distributed_residuals, k)
+data_gamma_distribution<-create_initial_arma(generate_gamma_distributed_residuals(3, shape, rate), alpha, beta, gamma_distributed_residuals, k)
 
 data<-data_normal_distribution
-
-plot(data)
 
 # Bootstrap-funktio
 create_arma_parameters<-function(rounds, series, arma_coef_amount){
@@ -88,7 +102,6 @@ confidence_interval<-0.9
 
 params<-create_arma_parameters(bootstrap_rounds, data, coefs)
 sorted_params<-sort_params(params)
-print(sorted_params)
 calculated_bounds<-calculate_bounds(sorted_params, confidence_interval)
 print(calculated_bounds)
 
