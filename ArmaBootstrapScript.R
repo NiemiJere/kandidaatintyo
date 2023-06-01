@@ -37,8 +37,8 @@ shape<-2
 rate<-0.5
 
 # Tasajakauman parametrit
-maximum = 10
-minimum = -10
+maximum = 5
+minimum = -5
 
 normally_distributed_residuals<-rnorm(k)
 gamma_distributed_residuals<-generate_gamma_distributed_residuals(k, shape, rate)
@@ -100,8 +100,8 @@ parameter_is_in_bounds<-function(bounds, param){
 bootstrap_rounds<-1000
 
 # Koska käsittelemme tässä työssä ARMA(2,3)-mallia, parametrejä on yhteensä 5
-ar_params<-2
-ma_params<-3
+ar_params<-length(alpha)
+ma_params<-length(beta)
 coefs<-ar_params+ma_params
 
 # Valitaan aluksi luottamusväliksi 90% luottamusväli
