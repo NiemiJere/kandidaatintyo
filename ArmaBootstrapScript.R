@@ -36,14 +36,21 @@ generate_gamma_distributed_residuals<-function(amount, shape, rate){
 shape<-2
 rate<-0.5
 
+# Tasajakauman parametrit
+maximum = 10
+minimum = -10
+
 normally_distributed_residuals<-rnorm(k)
 gamma_distributed_residuals<-generate_gamma_distributed_residuals(k, shape, rate)
+uniformly_distributed_residuals<-runif(k, min=minumum, max=maximum)
 
 'data_normal_distribution<-arima.sim(model=list(ar=alpha, ma=beta), n=k, innov=normally_distributed_residuals)
-data_gamma_distribution<-arima.sim(model=list(ar=alpha, ma=beta), n=k, innov=gamma_distributed_residuals)'
+data_gamma_distribution<-arima.sim(model=list(ar=alpha, ma=beta), n=k, innov=gamma_distributed_residuals)
+data_uniform_distribution<-arima.sim(model=list(ar=alpha, ma=beta), n=k, innov=uniformly_distributed_residuals)'
 
 data_normal_distribution<-create_initial_arma(rnorm(3), alpha, beta, normally_distributed_residuals, k)
 data_gamma_distribution<-create_initial_arma(generate_gamma_distributed_residuals(3, shape, rate), alpha, beta, gamma_distributed_residuals, k)
+data_uniformly_distribution<-create_initial_arma(runif(3, min=minumum, max=maximum), alpha, beta, uniformly_distributed_residuals, k)
 
 data<-data_normal_distribution
 
@@ -112,7 +119,18 @@ times_within_bounds<-matrix(0,nrow=coefs,ncol=1)
 original_params<-c(alpha, beta)
 
 for(i in 1:iteration_rounds){
-  params<-create_arma_parameters(bootstrap_rounds, data, coefs)
+  succeeded<-FALSE
+  repeat{
+    tryCatch({
+      params<-create_arma_parameters(bootstrap_rounds, data, coefs)
+      succeeded<-TRUE
+    }, error=function(e) {
+      cat("An error occurred:", conditionMessage(e), "\n")
+    })
+    if(succeeded){
+      break
+    }
+  }
   sorted_params<-sort_params(params)
   calculated_bounds<-calculate_bounds(sorted_params, confidence_interval)
   for(j in 1:nrow(calculated_bounds)){
