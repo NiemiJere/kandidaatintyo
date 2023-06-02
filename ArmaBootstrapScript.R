@@ -38,7 +38,7 @@ rate <- 0.5
 
 # Tasajakauman parametrit
 maximum <- 5
-minimum <- 5
+minimum <- -5
 
 normally_distributed_residuals <- rnorm(k)
 gamma_distributed_residuals <- generate_gamma_distributed_residuals(k, shape, rate)
@@ -52,7 +52,14 @@ data_normal_distribution <- create_initial_arma(rnorm(3), alpha, beta, normally_
 data_gamma_distribution <- create_initial_arma(generate_gamma_distributed_residuals(3, shape, rate), alpha, beta, gamma_distributed_residuals, k)
 data_uniform_distribution <- create_initial_arma(runif(3, min=minimum, max=maximum), alpha, beta, uniformly_distributed_residuals, k)
 
+print(uniformly_distributed_residuals)
+
 data <- data_normal_distribution
+
+# TODO: Generate plot labels and decide whether include to thesis or not.
+plot(data_normal_distribution, type="l")
+plot(data_gamma_distribution, type="l")
+plot(data_uniform_distribution, type="l")
 
 # Bootstrap-funktio
 create_arma_parameters <- function(rounds, series, arma_coef_amount){
@@ -143,9 +150,6 @@ for(i in 1:iteration_rounds){
 
 print("Parameters with normally distributed residuals")
 print(times_within_bounds)
-
-
-
 
 
 
