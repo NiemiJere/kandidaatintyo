@@ -61,6 +61,10 @@ plot(data_normal_distribution, type="l")
 plot(data_gamma_distribution, type="l")
 plot(data_uniform_distribution, type="l")
 
+hist(normally_distributed_residuals)
+hist(gamma_distributed_residuals)
+hist(uniformly_distributed_residuals)
+
 # Bootstrap-funktio
 create_arma_parameters <- function(rounds, series, arma_coef_amount){
   ts_min_length <- 10
