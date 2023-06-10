@@ -1,14 +1,40 @@
-# Valitaan alkutila 
+# Tällä koodilla tutkitaan ARMA-mallin takaisinotannan (bootstrapping) 
+# luottamusvälejä. Tutkimuksessa luodaan eripituisia aikasarjoja erilaisilla 
+# residuaalien variansseilla eri residuaalien jakaumille. Tutkittavat jakaumat 
+# ovat normaalijakauma, hännällinen gammajakauma ja tasajakauma.
+# 
+# © Jere Niemi, Aalto-yliopisto
 
+# Asetetaan mallille toistettavuus
 set.seed(123)
 
+# Tässä tunnetun ARMA(2,3)-aikasarjan parametrit.
 alpha <- c(0.5, -0.3)
 beta <- c(0.02, -0.15, 0.5)
 
-# Generoidaan residuaalit
-k <- 1000
+# Aikasarjan pituudet
+time_series_length <- c(100, 1000, 5000)
 
-create_initial_arma <- function(initial_values, a, b, res, len){
+# Gammajakauman parametrit
+shape <- 2
+rate <- 0.5
+
+# Tasajakauman parametrit
+maximum <- 5
+minimum <- -5
+
+# Luottamusvälit
+# confidence_intervals <- c(0.9, 0.95, 0.99)
+confidence_interval <- 0.9
+
+# Asetetaan takaisinotantojen määrä 
+bootstrap_rounds <- 1000
+
+# Esitellään dataa työn kannalta "standardiaikasarajalla", jonka pituus on 1000
+showcase_ts_length <- 1000
+
+# Funktio luo aikasarjan annettujen parametrien mukaisesti
+create_arma_ts <- function(initial_values, a, b, res, len){
   time_series <- matrix(NA, nrow=k, ncol=1)
   time_series[1, 1] <- initial_values[1]
   time_series[2, 1] <- initial_values[2]
@@ -22,39 +48,82 @@ create_initial_arma <- function(initial_values, a, b, res, len){
   return(time_series)
 }
 
+# Apufunktio, joka siirtää jakaumaa, siten että jakauman keskiarvo on 0.
 shift <- function(values, shift_amount){
   result <- values-shift_amount
   return(result)
 }
 
+# Funktio luo gammajakauman residuaalit ja siirtää ne siten, että palautettavan jakauman keskiarvo on 0
 generate_gamma_distributed_residuals <- function(amount, shape, rate){
   gamma_random_numbers <- rgamma(amount, shape, rate)
   return(shift(gamma_random_numbers, shape/rate))
 }
 
-# Gamma-jakauman parametrit
-shape <- 2
-rate <- 0.5
+# ARMA-mallin takaisinotantafunktio
+estimate_arma_parameters <- function(rounds, series, ar, ma){
+  ts_min_length <- 10
+  arma_coef_amount <- ar + ma
+  ARMA <- matrix(NA,nrow=rounds,ncol=arma_coef_amount)
+  for(i in 1:rounds){
+    series_length <- sample(ts_min_length:length(series), 1)
+    starting_point <- sample(1:(length(series) - series_length), 1)
+    bootstrap_series <- series[starting_point:(starting_point + series_length)]
+    bootstrap_fit <- arima(bootstrap_series, method="ML", order=c(ar, 0, ma))
+    for(j in 1:arma_coef_amount){
+      ARMA[i,j] <- bootstrap_fit$coef[j]
+    }
+  }
+  return(ARMA)
+}
 
-# Tasajakauman parametrit
-maximum <- 5
-minimum <- -5
+# Funktio järjestää matriisin alkiot suuruusjärjestykseen
+sort_params <- function(series){
+  sorted_matrix <- matrix(NA, nrow=nrow(series), ncol=ncol(series))
+  for(i in 1:ncol(series)){
+    sorted_matrix[,i] <- sort(series[, i])
+  }
+  return(sorted_matrix)
+}
 
-normally_distributed_residuals <- rnorm(k)
-gamma_distributed_residuals <- generate_gamma_distributed_residuals(k, shape, rate)
-uniformly_distributed_residuals <- runif(k, min=minimum, max=maximum)
+# Funktio palauttaa halutun luottamusvälin arvot
+get_confidence_interval <- function(series, interval){
+  low_bound_index <- round(((1 - interval)/2) * length(series)) + 1
+  up_bound_index<-round((1 - ((1 - interval)/2)) * length(series))
+  return(c(series[low_bound_index], series[up_bound_index]))
+}
 
-'data_normal_distribution <- arima.sim(model=list(ar=alpha, ma=beta), n=k, innov=normally_distributed_residuals)
-data_gamma_distribution <- arima.sim(model=list(ar=alpha, ma=beta), n=k, innov=gamma_distributed_residuals)
-data_uniform_distribution <- arima.sim(model=list(ar=alpha, ma=beta), n=k, innov=uniformly_distributed_residuals)'
+# Funktio laskee luottamusvälit kaikille ARMA-mallin parametreille
+calculate_bounds <- function(series, confidence_interval){
+  bounds_per_param <- matrix(NA, nrow=ncol(series), ncol=2)
+  for(i in 1:ncol(series)){
+    bounds_per_param[i,] <- get_confidence_interval(series[,i], confidence_interval)
+  }
+  return(bounds_per_param)
+}
 
-data_normal_distribution <- create_initial_arma(rnorm(3), alpha, beta, normally_distributed_residuals, k)
-data_gamma_distribution <- create_initial_arma(generate_gamma_distributed_residuals(3, shape, rate), alpha, beta, gamma_distributed_residuals, k)
-data_uniform_distribution <- create_initial_arma(runif(3, min=minimum, max=maximum), alpha, beta, uniformly_distributed_residuals, k)
+# Apufunktio, joka kertoo, onko oikea parametri luottamusvälin sisällä
+parameter_is_in_bounds <- function(bounds, param){
+  return(param >= bounds[1] & param <= bounds[2])
+}
 
-print(uniformly_distributed_residuals)
+calculate_confidence_interval_length <- function(bound){
+  return(bound[2] - bound[1])
+}
 
-data <- data_normal_distribution
+is_zero_in_bound <- function(bound){
+  return(bound[2] >= 0 & bound[1] < 0)
+}
+
+# Esitellään dataa
+
+normally_distributed_residuals <- rnorm(showcase_ts_lenght)
+gamma_distributed_residuals <- generate_gamma_distributed_residuals(showcase_ts_lenght, shape, rate)
+uniformly_distributed_residuals <- runif(showcase_ts_lenght, min=minimum, max=maximum)
+
+data_normal_distribution <- create_arma_ts(rnorm(3), alpha, beta, normally_distributed_residuals, showcase_ts_lenght)
+data_gamma_distribution <- create_arma_ts(generate_gamma_distributed_residuals(3, shape, rate), alpha, beta, gamma_distributed_residuals, showcase_ts_lenght)
+data_uniform_distribution <- create_arma_ts(runif(3, min=minimum, max=maximum), alpha, beta, uniformly_distributed_residuals, showcase_ts_lenght)
 
 # TODO: Generate plot labels and decide whether include to thesis or not.
 plot(data_normal_distribution, type="l")
@@ -65,80 +134,64 @@ hist(normally_distributed_residuals)
 hist(gamma_distributed_residuals)
 hist(uniformly_distributed_residuals)
 
-# Bootstrap-funktio
-create_arma_parameters <- function(rounds, series, arma_coef_amount){
-  ts_min_length <- 10
-  ARMA <- matrix(NA,nrow=rounds,ncol=arma_coef_amount)
-  for(i in 1:rounds){
-    series_length <- sample(ts_min_length:length(series), 1)
-    starting_point <- sample(1:(length(series) - series_length), 1)
-    bootstrap_series <- series[starting_point:(starting_point + series_length)]
-    bootstrap_fit <- arima(bootstrap_series, method="ML", order=c(2, 0, 3))
-    for(j in 1:arma_coef_amount){
-      ARMA[i,j] <- bootstrap_fit$coef[j]
-    }
-  }
-  return(ARMA)
-}
+# params <- estimate_arma_parameters(bootstrap_rounds, data, length(alpha), length(beta))
+# sorted_params <- sort_params(params)
+# calculated_bounds <- calculate_bounds(sorted_params, confidence_interval)
+# print(calculated_bounds)
 
-sort_params <- function(series){
-  sorted_matrix <- matrix(NA, nrow=nrow(series), ncol=ncol(series))
-  for(i in 1:ncol(series)){
-    sorted_matrix[,i] <- sort(series[, i])
-  }
-  return(sorted_matrix)
-}
-
-get_confidence_interval <- function(series, interval){
-  low_bound_index <- round(((1 - interval)/2) * length(series)) + 1
-  up_bound_index<-round((1 - ((1 - interval)/2)) * length(series))
-  return(c(series[low_bound_index], series[up_bound_index]))
-}
-
-calculate_bounds <- function(series, confidence_interval){
-  bounds_per_param <- matrix(NA, nrow=ncol(series), ncol=2)
-  for(i in 1:ncol(series)){
-    bounds_per_param[i,] <- get_confidence_interval(series[,i], confidence_interval)
-  }
-  return(bounds_per_param)
-}
-
-parameter_is_in_bounds <- function(bounds, param){
-  return(param >= bounds[1] & param <= bounds[2])
-}
-
-# Luodaan ARMA(2,3)-mallille matriisi hyödyntäen create_arma_parameters-funktiota
-bootstrap_rounds <- 1000
-
-# Koska käsittelemme tässä työssä ARMA(2,3)-mallia, parametrejä on yhteensä 5
-ar_params <- length(alpha)
-ma_params <- length(beta)
-coefs <- ar_params+ma_params
-
-# Valitaan aluksi luottamusväliksi 90% luottamusväli
-confidence_interval <- 0.9
-
-params <- create_arma_parameters(bootstrap_rounds, data, coefs)
-sorted_params <- sort_params(params)
-calculated_bounds <- calculate_bounds(sorted_params, confidence_interval)
-print(calculated_bounds)
-
-# Ajetaan yllä oleva 100 kertaa ja katsotaan, monta kertaa kukin parametri on luottamusvälin sisällä
+# Ajetaan iteraatio 100 kertaa ja katsotaan, monta kertaa kukin parametri on luottamusvälin sisällä
 iteration_rounds <- 100
 
-times_within_bounds <- matrix(0, nrow=coefs, ncol=1)
+times_within_bounds_normal_distribution <- matrix(0, nrow=length(alpha)+length(beta), ncol=1)
+times_within_bounds_gamma_distribution <- matrix(0, nrow=length(alpha)+length(beta), ncol=1)
+times_within_bounds_uniform_distribution <- matrix(0, nrow=length(alpha)+length(beta), ncol=1)
+
+bounds_normal_distribution <- matrix(0, nrow=iteration_rounds, ncol=2*(length(alpha) + length(beta)))
+bounds_gamma_distribution <- matrix(0, nrow=iteration_rounds, ncol=2*(length(alpha) + length(beta)))
+bounds_uniform_distribution <- matrix(0, nrow=iteration_rounds, ncol=2*(length(alpha) + length(beta)))
+
+bound_lengths_normal_distribution <- matrix(0, nrow=iteration_rounds, ncol=length(alpha) + length(beta))
+bound_lengths_gamma_distribution <- matrix(0, nrow=iteration_rounds, ncol=length(alpha) + length(beta))
+bound_lengths_uniform_distribution <- matrix(0, nrow=iteration_rounds, ncol=length(alpha) + length(beta))
+
+errors_normal_distribution <- 0
+errors_gamma_distribution <- 0
+errors_uniform_distribution <- 0
+
+zeros_within_bounds_normal_distribution <- matrix(0, nrow=length(alpha) + length(beta), ncol=1)
+zeros_within_bounds_gamma_distribution <- matrix(0, nrow=length(alpha) + length(beta), ncol=1)
+zeros_within_bounds_uniform_distribution <- matrix(0, nrow=length(alpha) + length(beta), ncol=1)
+
 original_params <- c(alpha, beta)
 
 for(i in 1:iteration_rounds){
+  
+  normally_distributed_residuals <- rnorm(showcase_ts_lenght)
+  gamma_distributed_residuals <- generate_gamma_distributed_residuals(showcase_ts_length, shape, rate)
+  uniformly_distributed_residuals <- runif(showcase_ts_lenght, min=minimum, max=maximum)
+  
+  data_normal_distribution <- create_arma_ts(rnorm(3), alpha, beta, normally_distributed_residuals, showcase_ts_length)
+  data_gamma_distribution <- create_arma_ts(generate_gamma_distributed_residuals(3, shape, rate), alpha, beta, gamma_distributed_residuals, showcase_ts_length)
+  data_uniform_distribution <- create_arma_ts(runif(3, min=minimum, max=maximum), alpha, beta, uniformly_distributed_residuals, showcase_ts_length)
+  
   succeeded <- FALSE
+  maxTries <- 1000
+  counter <- 0
+  
+  # Normaalijakauma
   repeat{
     tryCatch({
-      params <- create_arma_parameters(bootstrap_rounds, data, coefs)
+      counter <- counter + 1
+      if (counter == maxTries) {
+        print('Maximum amount of iterations reached. No stationary result found.')
+      }
+      params <- estimate_arma_parameters(bootstrap_rounds, data_normal_distribution, length(alpha), length(beta))
       succeeded <- TRUE
     }, error=function(e) {
+      errors_normal_distribution <- errors_normal_distribution + 1
       cat("An error occurred:", conditionMessage(e), "\n")
     })
-    if(succeeded){
+    if(succeeded | counter >= maxTries){
       break
     }
   }
@@ -146,14 +199,101 @@ for(i in 1:iteration_rounds){
   calculated_bounds <- calculate_bounds(sorted_params, confidence_interval)
   for(j in 1:nrow(calculated_bounds)){
     if(parameter_is_in_bounds(calculated_bounds[j,], original_params[j])){
-      times_within_bounds[j, 1] <- times_within_bounds[j, 1] + 1
+      times_within_bounds_normal_distribution[j, 1] <- times_within_bounds_normal_distribution[j, 1] + 1
+    }
+    if(is_zero_in_bound(calculated_bounds[j,])){
+      zeros_within_bounds_normal_distribution[j, 1] <- zeros_within_bounds_normal_distribution[j, 1] + 1
+    }
+    bound_lengths_normal_distribution[i, j] <- calculate_confidence_interval_length(calculated_bounds[j,])
+    bounds_normal_distribution[i, 2*j - 1] <- calculated_bounds[j, 1]
+    bounds_normal_distribution[i, 2*j] <- calculated_bounds[j, 2]
+  }
+  
+  counter <- 0
+
+  # Gammajakauma
+  repeat{
+    tryCatch({
+      counter <- counter + 1
+      if (counter == maxTries) {
+        print('Maximum amount of iterations reached. No stationary result found.')
+      }
+      params <- estimate_arma_parameters(bootstrap_rounds, data_gamma_distribution, length(alpha), length(beta))
+      succeeded <- TRUE
+    }, error=function(e) {
+      cat("An error occurred:", conditionMessage(e), "\n")
+      errors_gamma_distribution <- errors_gamma_distribution + 1
+    })
+    if(succeeded | counter >= maxTries){
+      break
     }
   }
+  sorted_params <- sort_params(params)
+  calculated_bounds <- calculate_bounds(sorted_params, confidence_interval)
+  for(j in 1:nrow(calculated_bounds)){
+    if(parameter_is_in_bounds(calculated_bounds[j,], original_params[j])){
+      times_within_bounds_gamma_distribution[j, 1] <- times_within_bounds_gamma_distribution[j, 1] + 1
+    }
+    if(is_zero_in_bound(calculated_bounds[j,])){
+      zeros_within_bounds_gamma_distribution[j, 1] <- zeros_within_bounds_gamma_distribution[j, 1] + 1
+    }
+    bound_lengths_gamma_distribution[i, j] <- calculate_confidence_interval_length(calculated_bounds[j,])
+    bounds_gamma_distribution[i, 2*j - 1] <- calculated_bounds[j, 1]
+    bounds_gamma_distribution[i, 2*j] <- calculated_bounds[j, 2]
+  }
+
+  counter <- 0
+
+  # Tasajakauma
+  repeat{
+    tryCatch({
+      counter <- counter + 1
+      if (counter == maxTries) {
+        print('Maximum amount of iterations reached. No stationary result found.')
+      }
+      params <- estimate_arma_parameters(bootstrap_rounds, data_uniform_distribution, length(alpha), length(beta))
+      succeeded <- TRUE
+    }, error=function(e) {
+      cat("An error occurred:", conditionMessage(e), "\n")
+      errors_uniform_distribution <- errors_uniform_distribution + 1
+    })
+    if(succeeded | counter >= maxTries){
+      break
+    }
+  }
+  sorted_params <- sort_params(params)
+  calculated_bounds <- calculate_bounds(sorted_params, confidence_interval)
+  for(j in 1:nrow(calculated_bounds)){
+    if(parameter_is_in_bounds(calculated_bounds[j,], original_params[j])){
+      times_within_bounds_uniform_distribution[j, 1] <- times_within_bounds_uniform_distribution[j, 1] + 1
+    }
+    if(is_zero_in_bound(calculated_bounds[j,])){
+      zeros_within_bounds_uniform_distribution[j, 1] <- zeros_within_bounds_uniform_distribution[j, 1] + 1
+    }
+    bound_lengths_uniform_distribution[i, j] <- calculate_confidence_interval_length(calculated_bounds[j,])
+    bounds_uniform_distribution[i, 2*j - 1] <- calculated_bounds[j, 1]
+    bounds_uniform_distribution[i, 2*j] <- calculated_bounds[j, 2]
+  }
+  
   print(paste(round((i/iteration_rounds) * 100),'% completed'))
+  
 }
 
-print("Parameters with normally distributed residuals")
-print(times_within_bounds)
+print(bounds_normal_distribution)
+print(bound_lengths_normal_distribution)
+print(zeros_within_bounds_normal_distribution)
+
+print(bounds_gamma_distribution)
+print(bound_lengths_gamma_distribution)
+print(zeros_within_bounds_gamma_distribution)
+
+print(bounds_uniform_distribution)
+print(bound_lengths_uniform_distribution)
+print(zeros_within_bounds_uniform_distribution)
+
+print(times_within_bounds_normal_distribution)
+print(times_within_bounds_gamma_distribution)
+print(times_within_bounds_uniform_distribution)
 
 
 
