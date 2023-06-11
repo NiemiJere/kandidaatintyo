@@ -281,6 +281,31 @@ for(i in 1:iteration_rounds){
 
 print(bounds_normal_distribution)
 print(bound_lengths_normal_distribution)
+
+for(i in 1:ncol(bound_lengths_normal_distribution)){
+  print(paste('index:', i))
+  print(max(bound_lengths_normal_distribution[,i]))
+  print(min(bound_lengths_normal_distribution[,i]))
+  print(mean(bound_lengths_normal_distribution[,i]))
+  print(var(bound_lengths_normal_distribution[,i]))
+}
+
+for(i in 1:ncol(bound_lengths_gamma_distribution)){
+  print(paste('index:', i))
+  print(max(bound_lengths_gamma_distribution[,i]))
+  print(min(bound_lengths_gamma_distribution[,i]))
+  print(mean(bound_lengths_gamma_distribution[,i]))
+  print(var(bound_lengths_gamma_distribution[,i]))
+}
+
+for(i in 1:ncol(bound_lengths_uniform_distribution)){
+  print(paste('index:', i))
+  print(max(bound_lengths_uniform_distribution[,i]))
+  print(min(bound_lengths_uniform_distribution[,i]))
+  print(mean(bound_lengths_uniform_distribution[,i]))
+  print(var(bound_lengths_uniform_distribution[,i]))
+}
+
 print(zeros_within_bounds_normal_distribution)
 
 print(bounds_gamma_distribution)
@@ -294,6 +319,15 @@ print(zeros_within_bounds_uniform_distribution)
 print(times_within_bounds_normal_distribution)
 print(times_within_bounds_gamma_distribution)
 print(times_within_bounds_uniform_distribution)
+
+print(errors_normal_distribution)
+print(errors_gamma_distribution)
+print(errors_uniform_distribution)
+
+hist(bound_lengths_normal_distribution, main = 'Normaalijakautuneiden residuaalien luottamusv‰lien pituudet (conf=0.9)', ylab = 'M‰‰r‰', xlab = 'Luottamusv‰lin pituus')
+hist(bound_lengths_gamma_distribution, main = 'Gammajakautuneiden residuaalien luottamusv‰lien pituudet (conf=0.9)', ylab = 'M‰‰r‰', xlab = 'Luottamusv‰lin pituus')
+hist(bound_lengths_uniform_distribution, main = 'Tasajakautuneiden residuaalien luottamusv‰lien pituudet (conf=0.9)', ylab = 'M‰‰r‰', xlab = 'Luottamusv‰lin pituus')
+
 
 
 
