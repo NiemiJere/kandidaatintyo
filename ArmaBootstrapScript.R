@@ -290,6 +290,21 @@ for(i in 1:ncol(bound_lengths_normal_distribution)){
   print(var(bound_lengths_normal_distribution[,i]))
 }
 
+for(i in 1:ncol(bounds_normal_distribution)){
+  print(paste('index:', i))
+  print(mean(bounds_normal_distribution[,i]))
+}
+
+for(i in 1:ncol(bounds_gamma_distribution)){
+  print(paste('index:', i))
+  print(mean(bounds_gamma_distribution[,i]))
+}
+
+for(i in 1:ncol(bounds_uniform_distribution)){
+  print(paste('index:', i))
+  print(mean(bounds_uniform_distribution[,i]))
+}
+
 for(i in 1:ncol(bound_lengths_gamma_distribution)){
   print(paste('index:', i))
   print(max(bound_lengths_gamma_distribution[,i]))
