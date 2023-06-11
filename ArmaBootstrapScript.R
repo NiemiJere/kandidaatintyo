@@ -165,6 +165,8 @@ zeros_within_bounds_uniform_distribution <- matrix(0, nrow=length(alpha) + lengt
 
 original_params <- c(alpha, beta)
 
+print(paste('Script is about to run with conf =', confidence_interval))
+
 for(i in 1:iteration_rounds){
   
   normally_distributed_residuals <- rnorm(showcase_ts_lenght)
@@ -345,9 +347,3 @@ print(errors_uniform_distribution)
 hist(bound_lengths_normal_distribution, main = 'Normaalijakautuneiden residuaalien luottamusvälien pituudet (conf=0.9)', ylab = 'Määrä', xlab = 'Luottamusvälin pituus')
 hist(bound_lengths_gamma_distribution, main = 'Gammajakautuneiden residuaalien luottamusvälien pituudet (conf=0.9)', ylab = 'Määrä', xlab = 'Luottamusvälin pituus')
 hist(bound_lengths_uniform_distribution, main = 'Tasajakautuneiden residuaalien luottamusvälien pituudet (conf=0.9)', ylab = 'Määrä', xlab = 'Luottamusvälin pituus')
-
-
-
-
-
-
