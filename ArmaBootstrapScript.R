@@ -25,7 +25,8 @@ minimum <- -5
 
 # Luottamusvälit
 # confidence_intervals <- c(0.9, 0.95, 0.99)
-confidence_interval <- 0.9
+# confidence_interval <- 0.9
+confidence_interval <- 0.5
 
 # Asetetaan takaisinotantojen määrä 
 bootstrap_rounds <- 1000
@@ -278,6 +279,8 @@ for(i in 1:iteration_rounds){
   print(paste(round((i/iteration_rounds) * 100),'% completed'))
   
 }
+
+# Tulosten printtaamista
 
 print(bounds_normal_distribution)
 print(bound_lengths_normal_distribution)
