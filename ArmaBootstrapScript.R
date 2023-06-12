@@ -26,17 +26,19 @@ minimum <- -5
 # Luottamusvälit
 # confidence_intervals <- c(0.9, 0.95, 0.99)
 # confidence_interval <- 0.9
-confidence_interval <- 0.5
+# confidence_interval <- 0.5
+confidence_interval <- 0.8
 
 # Asetetaan takaisinotantojen määrä 
 bootstrap_rounds <- 1000
 
 # Esitellään dataa työn kannalta "standardiaikasarajalla", jonka pituus on 1000
-showcase_ts_length <- 1000
+# showcase_ts_length <- 1000
+showcase_ts_length <- 500
 
 # Funktio luo aikasarjan annettujen parametrien mukaisesti
 create_arma_ts <- function(initial_values, a, b, res, len){
-  time_series <- matrix(NA, nrow=k, ncol=1)
+  time_series <- matrix(NA, nrow=len, ncol=1)
   time_series[1, 1] <- initial_values[1]
   time_series[2, 1] <- initial_values[2]
   time_series[3, 1] <- initial_values[3]
@@ -118,13 +120,13 @@ is_zero_in_bound <- function(bound){
 
 # Esitellään dataa
 
-normally_distributed_residuals <- rnorm(showcase_ts_lenght)
-gamma_distributed_residuals <- generate_gamma_distributed_residuals(showcase_ts_lenght, shape, rate)
-uniformly_distributed_residuals <- runif(showcase_ts_lenght, min=minimum, max=maximum)
+normally_distributed_residuals <- rnorm(showcase_ts_length)
+gamma_distributed_residuals <- generate_gamma_distributed_residuals(showcase_ts_length, shape, rate)
+uniformly_distributed_residuals <- runif(showcase_ts_length, min=minimum, max=maximum)
 
-data_normal_distribution <- create_arma_ts(rnorm(3), alpha, beta, normally_distributed_residuals, showcase_ts_lenght)
-data_gamma_distribution <- create_arma_ts(generate_gamma_distributed_residuals(3, shape, rate), alpha, beta, gamma_distributed_residuals, showcase_ts_lenght)
-data_uniform_distribution <- create_arma_ts(runif(3, min=minimum, max=maximum), alpha, beta, uniformly_distributed_residuals, showcase_ts_lenght)
+data_normal_distribution <- create_arma_ts(rnorm(3), alpha, beta, normally_distributed_residuals, showcase_ts_length)
+data_gamma_distribution <- create_arma_ts(generate_gamma_distributed_residuals(3, shape, rate), alpha, beta, gamma_distributed_residuals, showcase_ts_length)
+data_uniform_distribution <- create_arma_ts(runif(3, min=minimum, max=maximum), alpha, beta, uniformly_distributed_residuals, showcase_ts_length)
 
 # TODO: Generate plot labels and decide whether include to thesis or not.
 plot(data_normal_distribution, type="l")
@@ -166,12 +168,13 @@ zeros_within_bounds_uniform_distribution <- matrix(0, nrow=length(alpha) + lengt
 original_params <- c(alpha, beta)
 
 print(paste('Script is about to run with conf =', confidence_interval))
+print(paste('Script is about to run with ts_length =', showcase_ts_length))
 
 for(i in 1:iteration_rounds){
   
-  normally_distributed_residuals <- rnorm(showcase_ts_lenght)
+  normally_distributed_residuals <- rnorm(showcase_ts_length)
   gamma_distributed_residuals <- generate_gamma_distributed_residuals(showcase_ts_length, shape, rate)
-  uniformly_distributed_residuals <- runif(showcase_ts_lenght, min=minimum, max=maximum)
+  uniformly_distributed_residuals <- runif(showcase_ts_length, min=minimum, max=maximum)
   
   data_normal_distribution <- create_arma_ts(rnorm(3), alpha, beta, normally_distributed_residuals, showcase_ts_length)
   data_gamma_distribution <- create_arma_ts(generate_gamma_distributed_residuals(3, shape, rate), alpha, beta, gamma_distributed_residuals, showcase_ts_length)
@@ -344,6 +347,6 @@ print(errors_normal_distribution)
 print(errors_gamma_distribution)
 print(errors_uniform_distribution)
 
-hist(bound_lengths_normal_distribution, main = 'Normaalijakautuneiden residuaalien luottamusvälien pituudet (conf=0.9)', ylab = 'Määrä', xlab = 'Luottamusvälin pituus')
-hist(bound_lengths_gamma_distribution, main = 'Gammajakautuneiden residuaalien luottamusvälien pituudet (conf=0.9)', ylab = 'Määrä', xlab = 'Luottamusvälin pituus')
-hist(bound_lengths_uniform_distribution, main = 'Tasajakautuneiden residuaalien luottamusvälien pituudet (conf=0.9)', ylab = 'Määrä', xlab = 'Luottamusvälin pituus')
+hist(bound_lengths_normal_distribution, main = 'Normaalijakautuneiden residuaalien luottamusvälien pituudet (conf=0.8)', ylab = 'Määrä', xlab = 'Luottamusvälin pituus')
+hist(bound_lengths_gamma_distribution, main = 'Gammajakautuneiden residuaalien luottamusvälien pituudet (conf=0.8)', ylab = 'Määrä', xlab = 'Luottamusvälin pituus')
+hist(bound_lengths_uniform_distribution, main = 'Tasajakautuneiden residuaalien luottamusvälien pituudet (conf=0.8)', ylab = 'Määrä', xlab = 'Luottamusvälin pituus')
