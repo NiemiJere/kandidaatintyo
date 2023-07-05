@@ -27,14 +27,14 @@ minimum <- -5
 # confidence_intervals <- c(0.9, 0.95, 0.99)
 # confidence_interval <- 0.9
 # confidence_interval <- 0.5
-confidence_interval <- 0.8
+confidence_interval <- 0.98
 
 # Asetetaan takaisinotantojen määrä 
 bootstrap_rounds <- 1000
 
 # Esitellään dataa työn kannalta "standardiaikasarajalla", jonka pituus on 1000
-# showcase_ts_length <- 1000
-showcase_ts_length <- 500
+showcase_ts_length <- 1000
+# showcase_ts_length <- 100
 
 # Funktio luo aikasarjan annettujen parametrien mukaisesti
 create_arma_ts <- function(initial_values, a, b, res, len){
@@ -49,7 +49,7 @@ create_arma_ts <- function(initial_values, a, b, res, len){
       res[i]
   }
   return(time_series)
-}
+} 
 
 # Apufunktio, joka siirtää jakaumaa, siten että jakauman keskiarvo on 0.
 shift <- function(values, shift_amount){
@@ -129,13 +129,13 @@ data_gamma_distribution <- create_arma_ts(generate_gamma_distributed_residuals(3
 data_uniform_distribution <- create_arma_ts(runif(3, min=minimum, max=maximum), alpha, beta, uniformly_distributed_residuals, showcase_ts_length)
 
 # TODO: Generate plot labels and decide whether include to thesis or not.
-plot(data_normal_distribution, type="l")
-plot(data_gamma_distribution, type="l")
-plot(data_uniform_distribution, type="l")
+plot(data_normal_distribution, type="l", main="ARMA(2,3)-aikasarja normaalijakautuneilla residuaaleilla", ylab = 'Arvo', xlab = 'Indeksi')
+plot(data_gamma_distribution, type="l", main="ARMA(2,3)-aikasarja gammajakautuneilla residuaaleilla", ylab = 'Arvo', xlab = 'Indeksi')
+plot(data_uniform_distribution, type="l", main="ARMA(2,3)-aikasarja tasajakautuneilla residuaaleilla", ylab = 'Arvo', xlab = 'Indeksi')
 
-hist(normally_distributed_residuals)
-hist(gamma_distributed_residuals)
-hist(uniformly_distributed_residuals)
+hist(normally_distributed_residuals, main="Normaalijakautuneet residuaalit (mean=0, var=1)", ylab = 'Määrä', xlab = 'Arvo')
+hist(gamma_distributed_residuals, main="Gammajakautuneet residuaalit (mean=0, var=8)", ylab = 'Määrä', xlab = 'Arvo')
+hist(uniformly_distributed_residuals, main="Tasajakautuneet residuaalit (mean=0, var=8.3)", ylab = 'Määrä', xlab = 'Arvo')
 
 # params <- estimate_arma_parameters(bootstrap_rounds, data, length(alpha), length(beta))
 # sorted_params <- sort_params(params)
@@ -176,9 +176,21 @@ for(i in 1:iteration_rounds){
   gamma_distributed_residuals <- generate_gamma_distributed_residuals(showcase_ts_length, shape, rate)
   uniformly_distributed_residuals <- runif(showcase_ts_length, min=minimum, max=maximum)
   
+  # normally_distributed_residuals <- rnorm(showcase_ts_length, 0, sqrt(2))
+  # gamma_distributed_residuals <- generate_gamma_distributed_residuals(showcase_ts_length, 2*shape, rate)
+  # uniformly_distributed_residuals <- runif(showcase_ts_length, min=sqrt(2)*minimum, max=sqrt(2)*maximum)
+  
+  # normally_distributed_residuals <- rnorm(showcase_ts_length, 0, sqrt(2)/2)
+  # gamma_distributed_residuals <- generate_gamma_distributed_residuals(showcase_ts_length, 0.5*shape, rate)
+  # uniformly_distributed_residuals <- runif(showcase_ts_length, min=(sqrt(2)/2)*minimum, max=(sqrt(2)/2)*maximum)
+  
   data_normal_distribution <- create_arma_ts(rnorm(3), alpha, beta, normally_distributed_residuals, showcase_ts_length)
   data_gamma_distribution <- create_arma_ts(generate_gamma_distributed_residuals(3, shape, rate), alpha, beta, gamma_distributed_residuals, showcase_ts_length)
   data_uniform_distribution <- create_arma_ts(runif(3, min=minimum, max=maximum), alpha, beta, uniformly_distributed_residuals, showcase_ts_length)
+  
+  # data_normal_distribution <- create_arma_ts(rnorm(3, 0, sqrt(2)/2), alpha, beta, normally_distributed_residuals, showcase_ts_length)
+  # data_gamma_distribution <- create_arma_ts(generate_gamma_distributed_residuals(3, 0.5*shape, rate), alpha, beta, gamma_distributed_residuals, showcase_ts_length)
+  # data_uniform_distribution <- create_arma_ts(runif(3, min=(sqrt(2)/2)*minimum, max=(sqrt(2)/2)*maximum), alpha, beta, uniformly_distributed_residuals, showcase_ts_length)
   
   succeeded <- FALSE
   maxTries <- 1000
@@ -347,6 +359,65 @@ print(errors_normal_distribution)
 print(errors_gamma_distribution)
 print(errors_uniform_distribution)
 
-hist(bound_lengths_normal_distribution, main = 'Normaalijakautuneiden residuaalien luottamusvälien pituudet (conf=0.8)', ylab = 'Määrä', xlab = 'Luottamusvälin pituus')
-hist(bound_lengths_gamma_distribution, main = 'Gammajakautuneiden residuaalien luottamusvälien pituudet (conf=0.8)', ylab = 'Määrä', xlab = 'Luottamusvälin pituus')
-hist(bound_lengths_uniform_distribution, main = 'Tasajakautuneiden residuaalien luottamusvälien pituudet (conf=0.8)', ylab = 'Määrä', xlab = 'Luottamusvälin pituus')
+hist(bound_lengths_normal_distribution, main = 'Normaalijakautuneiden residuaalien luottamusvälien pituudet (conf=0.8, var=0.5x)', ylab = 'Määrä', xlab = 'Luottamusvälin pituus')
+hist(bound_lengths_gamma_distribution, main = 'Gammajakautuneiden residuaalien luottamusvälien pituudet (conf=0.8, var=0.5x)', ylab = 'Määrä', xlab = 'Luottamusvälin pituus')
+hist(bound_lengths_uniform_distribution, main = 'Tasajakautuneiden residuaalien luottamusvälien pituudet (conf=0.8, var=0.5x)', ylab = 'Määrä', xlab = 'Luottamusvälin pituus')
+
+intervals <- c(80, 82, 84, 86, 88, 90, 92, 94, 96, 98)
+
+n_mat <- matrix(0, nrow=5, ncol=10)
+
+n_mat[1,] <- c(85, 91, 94, 96, 98, 99, 99, 100, 100, 100)
+n_mat[2,] <- c(80, 89, 91, 92, 93, 96, 98, 100, 100, 100)
+n_mat[3,] <- c(86, 91, 93, 98, 98, 99, 100, 100, 100, 100)
+n_mat[4,] <- c(82, 89, 93, 93, 94, 95, 98, 100, 100, 100)
+n_mat[5,] <- c(80, 90, 91, 93, 95, 97, 98, 99, 100, 100)
+
+
+normal_distribution_intervals_within_bounds <- array(c(
+  c(85, 91, 94, 96, 98, 99, 99, 100, 100, 100),
+  c(80, 89, 91, 92, 93, 96, 98, 100, 100, 100),
+  c(86, 91, 93, 98, 98, 99, 100, 100, 100, 100),
+  c(82, 89, 93, 93, 94, 95, 98, 100, 100, 100),
+  c(80, 90, 91, 93, 95, 97, 98, 99, 100, 100)
+), dim = c(5, 10))
+    
+gamma_distribution_intervals_within_bounds <- c(
+  c(87, 86, 90, 93, 95, 97, 98, 99, 100, 100),
+  c(78, 87, 89, 92, 94, 96, 97, 98, 100, 100),
+  c(86, 89, 91, 93, 95, 97, 98, 100, 100, 100),
+  c(85, 82, 82, 84, 90, 94, 96, 100, 100, 100),
+  c(79, 87, 91, 93, 93, 96, 98, 98, 100, 100)
+)
+
+uniform_distribution_intervals_within_bounds <- c(
+  c(89, 88, 91, 94, 95, 99, 100, 100, 100, 100),
+  c(81, 80, 85, 89, 90, 91, 94, 97, 99, 100),
+  c(85, 87, 93, 95, 97, 100, 100, 100, 100, 100),
+  c(81, 81, 85, 89, 90, 93, 95, 98, 98, 100),
+  c(78, 83, 88, 90, 91, 95, 98, 99, 99, 100)
+)
+
+print(normal_distribution_intervals_within_bounds)
+plot(intervals, n_mat[1,], xlim = c(80, 100), ylim = c(75, 100), xlab = "Takaisinotantaluottamusväli", ylab = "Parametri luottamusvälin sisällä (kertaa)", main = "Takaisinotantaluottamusvälin pituuden vaikutus oikean parametrin osumiseen luottamusvälille")
+
+points(intervals, n_mat[1,], col="black")
+lines(intervals, n_mat[1,], col="black",lty=2)
+
+points(intervals, n_mat[2,], col="red", pch=0)
+lines(intervals, n_mat[2,], col="red",lty=2)
+
+points(intervals, n_mat[3,], col="green", pch=2)
+lines(intervals, n_mat[3,], col="green",lty=2)
+
+points(intervals, n_mat[4,], col="blue", pch=4)
+lines(intervals, n_mat[4,], col="blue",lty=2)
+
+points(intervals, n_mat[5,], col="orange", pch=8)
+lines(intervals, n_mat[5,], col="orange",lty=2)
+
+legend("topleft",legend=c("ar1","ar2","ma1","ma2","ma3"), 
+       col=c("black","red","green", "blue", "orange"),
+       pch=c(1,0,2,4,8), 
+       lty=c(1,1,1,1,1),
+       ncol=1)
