@@ -1,7 +1,7 @@
 # Tällä koodilla tutkitaan ARMA-mallin takaisinotannan 
 # (bootstrapping) luottamusvälejä. Tutkimuksessa luodaan eripituisia 
-# aikasarjoja erilaisilla residuaalien variansseilla eri residuaalien 
-# jakaumille. Tutkittavat jakaumat ovat normaalijakauma, hännällinen 
+# aikasarjoja erilaisilla luottamustasoilla eri residuaalien 
+# jakaumille. Tutkittavat jakaumat ovat normaalijakauma, vino 
 # gammajakauma ja tasajakauma.
 # 
 # © Jere Niemi, Aalto-yliopisto
@@ -13,9 +13,6 @@ set.seed(123)
 alpha <- c(0.5, -0.3)
 beta <- c(0.02, -0.15, 0.5)
 
-# Aikasarjan pituudet
-time_series_length <- c(100, 1000, 5000)
-
 # Gammajakauman parametrit
 shape <- 2
 rate <- 0.5
@@ -26,13 +23,17 @@ minimum <- -5
 
 # Luottamusväli
 confidence_interval <- 0.9
+# confidence_interval <- 0.8
+# confidence_interval <- 0.5
 
 # Asetetaan takaisinotantojen määrä 
 bootstrap_rounds <- 1000
 
-# Esitellään dataa työn kannalta "standardiaikasarajalla", 
-# jonka pituus on 1000
+# Valitaan aikasarjan pituus
 showcase_ts_length <- 1000
+# showcase_ts_length <- 500
+# showcase_ts_length <- 100
+
 
 # Funktio luo aikasarjan annettujen parametrien mukaisesti
 create_arma_ts <- function(initial_values, a, b, res, len){
@@ -133,7 +134,7 @@ is_zero_in_bound <- function(bound){
   return(bound[2] >= 0 & bound[1] < 0)
 }
 
-# Esitellään dataa
+# Seuraavaa osiota käytetään datan esittelyyn
 
 normally_distributed_residuals <- rnorm(showcase_ts_length)
 
@@ -200,29 +201,28 @@ plot(
 
 hist(
   normally_distributed_residuals,
-  main="Normaalijakautuneet residuaalit (mean=0, var=1)",
+  main="Normaalijakautuneet residuaalit (odotusarvo=0, var=1)",
   ylab = 'Määrä',
   xlab = 'Arvo'
 )
 
 hist(
   gamma_distributed_residuals,
-  main="Gammajakautuneet residuaalit (mean=0, var=8)",
+  main="Gammajakautuneet residuaalit (odotusarvo=0, var=8)",
   ylab = 'Määrä',
   xlab = 'Arvo'
 )
 
 hist(
   uniformly_distributed_residuals,
-  main="Tasajakautuneet residuaalit (mean=0, var=8.3)",
+  main="Tasajakautuneet residuaalit (odotusarvo=0, var=8.3)",
   ylab = 'Määrä',
   xlab = 'Arvo'
 )
 
-# params <- estimate_arma_parameters(bootstrap_rounds, data, length(alpha), length(beta))
-# sorted_params <- sort_params(params)
-# calculated_bounds <- calculate_bounds(sorted_params, confidence_interval)
-# print(calculated_bounds)
+# Datan esittelyosio päättyy
+
+# Takaisinotantaiteraatiot alkavat
 
 # Ajetaan iteraatio 100 kertaa ja katsotaan, monta kertaa kukin 
 # parametri on luottamusvälin sisällä
@@ -317,14 +317,7 @@ for(i in 1:iteration_rounds){
     generate_gamma_distributed_residuals(showcase_ts_length, shape, rate)
   uniformly_distributed_residuals <- 
     runif(showcase_ts_length, min=minimum, max=maximum)
-  
-  # normally_distributed_residuals <- rnorm(showcase_ts_length, 0, sqrt(2))
-  # gamma_distributed_residuals <- generate_gamma_distributed_residuals(showcase_ts_length, 2*shape, rate)
-  # uniformly_distributed_residuals <- runif(showcase_ts_length, min=sqrt(2)*minimum, max=sqrt(2)*maximum)
-  
-  # normally_distributed_residuals <- rnorm(showcase_ts_length, 0, sqrt(2)/2)
-  # gamma_distributed_residuals <- generate_gamma_distributed_residuals(showcase_ts_length, 0.5*shape, rate)
-  # uniformly_distributed_residuals <- runif(showcase_ts_length, min=(sqrt(2)/2)*minimum, max=(sqrt(2)/2)*maximum)
+
   
   data_normal_distribution <- create_arma_ts(
     rnorm(3),
@@ -346,10 +339,6 @@ for(i in 1:iteration_rounds){
     uniformly_distributed_residuals,
     showcase_ts_length
   )
-  
-  # data_normal_distribution <- create_arma_ts(rnorm(3, 0, sqrt(2)/2), alpha, beta, normally_distributed_residuals, showcase_ts_length)
-  # data_gamma_distribution <- create_arma_ts(generate_gamma_distributed_residuals(3, 0.5*shape, rate), alpha, beta, gamma_distributed_residuals, showcase_ts_length)
-  # data_uniform_distribution <- create_arma_ts(runif(3, min=(sqrt(2)/2)*minimum, max=(sqrt(2)/2)*maximum), alpha, beta, uniformly_distributed_residuals, showcase_ts_length)
   
   succeeded <- FALSE
   maxTries <- 1000
@@ -485,9 +474,17 @@ for(i in 1:iteration_rounds){
 
 # Tulosten printtaamista
 
+# Tarkastellaan yleisesti rajojen pituuksia
 print(bounds_normal_distribution)
 print(bound_lengths_normal_distribution)
 
+print(bounds_gamma_distribution)
+print(bound_lengths_gamma_distribution)
+
+print(bounds_uniform_distribution)
+print(bound_lengths_uniform_distribution)
+
+# Rajojen avainluvut normaalijakaumalle
 for(i in 1:ncol(bound_lengths_normal_distribution)){
   print(paste('index:', i))
   print(max(bound_lengths_normal_distribution[,i]))
@@ -496,21 +493,7 @@ for(i in 1:ncol(bound_lengths_normal_distribution)){
   print(var(bound_lengths_normal_distribution[,i]))
 }
 
-for(i in 1:ncol(bounds_normal_distribution)){
-  print(paste('index:', i))
-  print(mean(bounds_normal_distribution[,i]))
-}
-
-for(i in 1:ncol(bounds_gamma_distribution)){
-  print(paste('index:', i))
-  print(mean(bounds_gamma_distribution[,i]))
-}
-
-for(i in 1:ncol(bounds_uniform_distribution)){
-  print(paste('index:', i))
-  print(mean(bounds_uniform_distribution[,i]))
-}
-
+# Rajojen avainluvut gammajakaumalle 
 for(i in 1:ncol(bound_lengths_gamma_distribution)){
   print(paste('index:', i))
   print(max(bound_lengths_gamma_distribution[,i]))
@@ -519,6 +502,7 @@ for(i in 1:ncol(bound_lengths_gamma_distribution)){
   print(var(bound_lengths_gamma_distribution[,i]))
 }
 
+# Rajojen avainluvut tasajakaumalle 
 for(i in 1:ncol(bound_lengths_uniform_distribution)){
   print(paste('index:', i))
   print(max(bound_lengths_uniform_distribution[,i]))
@@ -527,35 +511,56 @@ for(i in 1:ncol(bound_lengths_uniform_distribution)){
   print(var(bound_lengths_uniform_distribution[,i]))
 }
 
+# Rajat normaalijakaumalle 
+for(i in 1:ncol(bounds_normal_distribution)){
+  print(paste('index:', i))
+  print(mean(bounds_normal_distribution[,i]))
+}
+
+# Rajat gammajakaumalle
+for(i in 1:ncol(bounds_gamma_distribution)){
+  print(paste('index:', i))
+  print(mean(bounds_gamma_distribution[,i]))
+}
+
+# Rajat tasajakaumalle 
+for(i in 1:ncol(bounds_uniform_distribution)){
+  print(paste('index:', i))
+  print(mean(bounds_uniform_distribution[,i]))
+}
+
+# Luottamusväli kattaa nollan
 print(zeros_within_bounds_normal_distribution)
-
-print(bounds_gamma_distribution)
-print(bound_lengths_gamma_distribution)
 print(zeros_within_bounds_gamma_distribution)
-
-print(bounds_uniform_distribution)
-print(bound_lengths_uniform_distribution)
 print(zeros_within_bounds_uniform_distribution)
 
+# Kerrat rajojen sisällä eri jakaumatyypeille
 print(times_within_bounds_normal_distribution)
 print(times_within_bounds_gamma_distribution)
 print(times_within_bounds_uniform_distribution)
 
+# Kuinka monta virhettä esiintyi
 print(errors_normal_distribution)
 print(errors_gamma_distribution)
 print(errors_uniform_distribution)
+
+# Lisätutkimus: luottamusvälille osumisen todennäköisyys
+# luottamustason funktiona
 
 intervals <- c(80, 82, 84, 86, 88, 90, 92, 94, 96, 98)
 
 n_mat <- matrix(0, nrow=5, ncol=10)
 
+# Tulokset kaikille eri jakaumatyypeille (normaali-, gamma- ja
+# tasajakauma), kommentoi haluttu palanen näkyviin
+
 'n_mat[1,] <- c(85, 91, 94, 96, 98, 99, 99, 100, 100, 100)
 n_mat[2,] <- c(80, 89, 91, 92, 93, 96, 98, 100, 100, 100)
 n_mat[3,] <- c(86, 91, 93, 98, 98, 99, 100, 100, 100, 100)
 n_mat[4,] <- c(82, 89, 93, 93, 94, 95, 98, 100, 100, 100)
-n_mat[5,] <- c(80, 90, 91, 93, 95, 97, 98, 99, 100, 100)'
+n_mat[5,] <- c(80, 90, 91, 93, 95, 97, 98, 99, 100, 100)
 
-'n_mat[1,] <- c(87, 86, 90, 93, 95, 97, 98, 99, 100, 100)
+n_mat[1,] <- c(87, 86, 90, 93, 95, 97, 98, 99, 100, 100)
 n_mat[2,] <- c(78, 87, 89, 92, 94, 96, 97, 98, 100, 100)
 n_mat[3,] <- c(86, 89, 91, 93, 95, 97, 98, 100, 100, 100)
 n_mat[4,] <- c(85, 82, 82, 84, 90, 94, 96, 100, 100, 100)
@@ -567,42 +572,19 @@ n_mat[3,] <- c(85, 87, 93, 95, 97, 100, 100, 100, 100, 100)
 n_mat[4,] <- c(81, 81, 85, 89, 90, 93, 95, 98, 98, 100)
 n_mat[5,] <- c(78, 83, 88, 90, 91, 95, 98, 99, 99, 100)
 
-
-normal_distribution_intervals_within_bounds <- array(c(
-  c(85, 91, 94, 96, 98, 99, 99, 100, 100, 100),
-  c(80, 89, 91, 92, 93, 96, 98, 100, 100, 100),
-  c(86, 91, 93, 98, 98, 99, 100, 100, 100, 100),
-  c(82, 89, 93, 93, 94, 95, 98, 100, 100, 100),
-  c(80, 90, 91, 93, 95, 97, 98, 99, 100, 100)
-), dim = c(5, 10))
-    
-gamma_distribution_intervals_within_bounds <- c(
-  c(87, 86, 90, 93, 95, 97, 98, 99, 100, 100),
-  c(78, 87, 89, 92, 94, 96, 97, 98, 100, 100),
-  c(86, 89, 91, 93, 95, 97, 98, 100, 100, 100),
-  c(85, 82, 82, 84, 90, 94, 96, 100, 100, 100),
-  c(79, 87, 91, 93, 93, 96, 98, 98, 100, 100)
+main_str <- paste(
+  "Luottamusvälille osumisen todennäköisyyden kehittyminen",
+  "luottamustason funktiona, [jakaumatyyppi] residuaalit"
 )
-
-uniform_distribution_intervals_within_bounds <- c(
-  c(89, 88, 91, 94, 95, 99, 100, 100, 100, 100),
-  c(81, 80, 85, 89, 90, 91, 94, 97, 99, 100),
-  c(85, 87, 93, 95, 97, 100, 100, 100, 100, 100),
-  c(81, 81, 85, 89, 90, 93, 95, 98, 98, 100),
-  c(78, 83, 88, 90, 91, 95, 98, 99, 99, 100)
-)
-
-print(normal_distribution_intervals_within_bounds)
 
 plot(
   intervals,
   n_mat[1,],
-  xlim = c(80, 100),
-  ylim = c(75, 100),
-  xlab = "Takaisinotantaluottamusväli",
-  ylab = "Parametri luottamusvälin sisällä (kertaa)",
-  main = "Takaisinotantaluottamusvälin pituuden vaikutus 
-    oikean parametrin osumiseen luottamusvälille"
+  xlim = c(78, 100),
+  ylim = c(78, 100),
+  xlab = "Luottamustaso (%)",
+  ylab = "Luottamusväli kattaa parametrin (kertaa sadasta)",
+  main = main_str
 )
 
 points(intervals, n_mat[1,], col="black")
@@ -620,6 +602,8 @@ lines(intervals, n_mat[4,], col="blue",lty=2)
 points(intervals, n_mat[5,], col="orange", pch=8)
 lines(intervals, n_mat[5,], col="orange",lty=2)
 
+abline(coef = c(0, 1), lwd = 2)
+
 legend(
   "topleft",
   legend=c("ar1","ar2","ma1","ma2","ma3"),
@@ -628,3 +612,4 @@ legend(
   lty=c(1,1,1,1,1),
   ncol=1
 )
+
