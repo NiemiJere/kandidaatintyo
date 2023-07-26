@@ -1,8 +1,8 @@
 # Tällä koodilla tutkitaan ARMA-mallin takaisinotannan 
-# (bootstrapping) luottamusvälejä. Tutkimuksessa luodaan eripituisia 
-# aikasarjoja erilaisilla luottamustasoilla eri residuaalien 
-# jakaumille. Tutkittavat jakaumat ovat normaalijakauma, vino 
-# gammajakauma ja tasajakauma.
+# (bootstrapping) luottamusvälejä. Tutkimuksessa luodaan
+# eripituisia aikasarjoja erilaisilla luottamustasoilla eri 
+# residuaalien jakaumille. Tutkittavat jakaumat ovat 
+# normaalijakauma, vino gammajakauma sekä tasajakauma.
 # 
 # © Jere Niemi, Aalto-yliopisto
 
@@ -307,14 +307,21 @@ print(
 )
 
 print(
-  paste('Script is about to run with ts_length =', showcase_ts_length)
+  paste(
+    'Script is about to run with ts_length =',
+    showcase_ts_length
+  )
 )
+
+
 
 for(i in 1:iteration_rounds){
   
   normally_distributed_residuals <- rnorm(showcase_ts_length)
   gamma_distributed_residuals <- 
-    generate_gamma_distributed_residuals(showcase_ts_length, shape, rate)
+    generate_gamma_distributed_residuals(
+      showcase_ts_length, shape, rate
+    )
   uniformly_distributed_residuals <- 
     runif(showcase_ts_length, min=minimum, max=maximum)
 
@@ -349,8 +356,12 @@ for(i in 1:iteration_rounds){
     tryCatch({
       counter <- counter + 1
       if (counter == maxTries) {
-        print('Maximum amount of iterations reached. 
-              No stationary result found.')
+        print(
+          paste(
+            'Maximum amount of iterations reached.',
+            'No stationary result found.'
+          )
+        )
       }
       params <- estimate_arma_parameters(
         bootstrap_rounds,
@@ -371,7 +382,10 @@ for(i in 1:iteration_rounds){
   calculated_bounds <- 
     calculate_bounds(sorted_params, confidence_interval)
   for(j in 1:nrow(calculated_bounds)){
-    if(parameter_is_in_bounds(calculated_bounds[j,], original_params[j])){
+    if(
+      parameter_is_in_bounds(
+        calculated_bounds[j,], original_params[j]
+      )){
       times_within_bounds_normal_distribution[j, 1] <- 
         times_within_bounds_normal_distribution[j, 1] + 1
     }
@@ -381,7 +395,8 @@ for(i in 1:iteration_rounds){
     }
     bound_lengths_normal_distribution[i, j] <- 
       calculate_confidence_interval_length(calculated_bounds[j,])
-    bounds_normal_distribution[i, 2*j - 1] <- calculated_bounds[j, 1]
+    bounds_normal_distribution[i, 2*j - 1] <- 
+      calculated_bounds[j, 1]
     bounds_normal_distribution[i, 2*j] <- calculated_bounds[j, 2]
   }
   
@@ -392,8 +407,12 @@ for(i in 1:iteration_rounds){
     tryCatch({
       counter <- counter + 1
       if (counter == maxTries) {
-        print('Maximum amount of iterations reached. 
-              No stationary result found.')
+        print(
+          paste(
+            'Maximum amount of iterations reached.',
+            'No stationary result found.'
+          )
+        )
       }
       params <- estimate_arma_parameters(
         bootstrap_rounds,
@@ -411,9 +430,12 @@ for(i in 1:iteration_rounds){
     }
   }
   sorted_params <- sort_params(params)
-  calculated_bounds <- calculate_bounds(sorted_params, confidence_interval)
+  calculated_bounds <- 
+    calculate_bounds(sorted_params, confidence_interval)
   for(j in 1:nrow(calculated_bounds)){
-    if(parameter_is_in_bounds(calculated_bounds[j,], original_params[j])){
+    if(parameter_is_in_bounds(
+        calculated_bounds[j,], original_params[j]
+      )){
       times_within_bounds_gamma_distribution[j, 1] <- 
         times_within_bounds_gamma_distribution[j, 1] + 1
     }
@@ -423,7 +445,8 @@ for(i in 1:iteration_rounds){
     }
     bound_lengths_gamma_distribution[i, j] <- 
       calculate_confidence_interval_length(calculated_bounds[j,])
-    bounds_gamma_distribution[i, 2*j - 1] <- calculated_bounds[j, 1]
+    bounds_gamma_distribution[i, 2*j - 1] <- 
+      calculated_bounds[j, 1]
     bounds_gamma_distribution[i, 2*j] <- calculated_bounds[j, 2]
   }
 
@@ -434,8 +457,12 @@ for(i in 1:iteration_rounds){
     tryCatch({
       counter <- counter + 1
       if (counter == maxTries) {
-        print('Maximum amount of iterations reached. 
-              No stationary result found.')
+        print(
+          paste(
+            'Maximum amount of iterations reached.',
+            'No stationary result found.'
+          )
+        )
       }
       params <- estimate_arma_parameters(
         bootstrap_rounds,
@@ -445,16 +472,20 @@ for(i in 1:iteration_rounds){
       succeeded <- TRUE
     }, error=function(e) {
       cat("An error occurred:", conditionMessage(e), "\n")
-      errors_uniform_distribution <- errors_uniform_distribution + 1
+      errors_uniform_distribution <- 
+        errors_uniform_distribution + 1
     })
     if(succeeded | counter >= maxTries){
       break
     }
   }
   sorted_params <- sort_params(params)
-  calculated_bounds <- calculate_bounds(sorted_params, confidence_interval)
+  calculated_bounds <- 
+    calculate_bounds(sorted_params, confidence_interval)
   for(j in 1:nrow(calculated_bounds)){
-    if(parameter_is_in_bounds(calculated_bounds[j,], original_params[j])){
+    if(parameter_is_in_bounds(
+      calculated_bounds[j,], original_params[j])
+      ){
       times_within_bounds_uniform_distribution[j, 1] <- 
         times_within_bounds_uniform_distribution[j, 1] + 1
     }
@@ -464,7 +495,8 @@ for(i in 1:iteration_rounds){
     }
     bound_lengths_uniform_distribution[i, j] <- 
       calculate_confidence_interval_length(calculated_bounds[j,])
-    bounds_uniform_distribution[i, 2*j - 1] <- calculated_bounds[j, 1]
+    bounds_uniform_distribution[i, 2*j - 1] <- 
+      calculated_bounds[j, 1]
     bounds_uniform_distribution[i, 2*j] <- calculated_bounds[j, 2]
   }
   
