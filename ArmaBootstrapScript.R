@@ -1,7 +1,7 @@
 # Tällä koodilla tutkitaan ARMA-mallin takaisinotannan 
 # (bootstrapping) luottamusvälejä. Tutkimuksessa luodaan
 # eripituisia aikasarjoja erilaisilla luottamustasoilla eri 
-# residuaalien jakaumille. Tutkittavat jakaumat ovat 
+# virhetermien jakaumille. Tutkittavat jakaumat ovat 
 # normaalijakauma, vino gammajakauma sekä tasajakauma.
 # 
 # © Jere Niemi, Aalto-yliopisto
@@ -58,7 +58,7 @@ shift <- function(values, shift_amount){
   return(result)
 }
 
-# Funktio luo gammajakauman residuaalit ja siirtää ne siten, 
+# Funktio luo gammajakauman virhetermit ja siirtää ne siten, 
 # että palautettavan jakauman keskiarvo on 0.
 generate_gamma_distributed_residuals <- function(
   amount,
@@ -104,7 +104,7 @@ sort_params <- function(series){
 # Funktio palauttaa halutun luottamusvälin arvot
 get_confidence_interval <- function(series, interval){
   low_bound_index <- round(((1 - interval)/2) * length(series)) + 1
-  up_bound_index<-round((1 - ((1 - interval)/2)) * length(series))
+  up_bound_index <- round((1 - ((1 - interval)/2)) * length(series))
   return(c(series[low_bound_index], series[up_bound_index]))
 }
 
@@ -178,7 +178,7 @@ data_uniform_distribution <- create_arma_ts(
 plot(
   data_normal_distribution,
   type="l",
-  main="ARMA(2,3)-aikasarja normaalijakautuneilla residuaaleilla",
+  main="ARMA(2,3)-aikasarja normaalijakautuneilla virhetermeillä",
   ylab = 'Arvo',
   xlab = 'Indeksi'
 )
@@ -186,7 +186,7 @@ plot(
 plot(
   data_gamma_distribution,
   type="l",
-  main="ARMA(2,3)-aikasarja gammajakautuneilla residuaaleilla",
+  main="ARMA(2,3)-aikasarja gammajakautuneilla virhetermeillä",
   ylab = 'Arvo',
   xlab = 'Indeksi'
 )
@@ -194,28 +194,28 @@ plot(
 plot(
   data_uniform_distribution,
   type="l",
-  main="ARMA(2,3)-aikasarja tasajakautuneilla residuaaleilla",
+  main="ARMA(2,3)-aikasarja tasajakautuneilla virhetermeillä",
   ylab = 'Arvo',
   xlab = 'Indeksi'
 )
 
 hist(
   normally_distributed_residuals,
-  main="Normaalijakautuneet residuaalit (odotusarvo=0, var=1)",
+  main="Normaalijakautuneet virhetermit (odotusarvo=0, var=1)",
   ylab = 'Määrä',
   xlab = 'Arvo'
 )
 
 hist(
   gamma_distributed_residuals,
-  main="Gammajakautuneet residuaalit (odotusarvo=0, var=8)",
+  main="Gammajakautuneet virhetermit (odotusarvo=0, var=8)",
   ylab = 'Määrä',
   xlab = 'Arvo'
 )
 
 hist(
   uniformly_distributed_residuals,
-  main="Tasajakautuneet residuaalit (odotusarvo=0, var=8.3)",
+  main="Tasajakautuneet virhetermit (odotusarvo=0, var=8.3)",
   ylab = 'Määrä',
   xlab = 'Arvo'
 )
@@ -606,7 +606,7 @@ n_mat[5,] <- c(78, 83, 88, 90, 91, 95, 98, 99, 99, 100)
 
 main_str <- paste(
   "Luottamusvälille osumisen todennäköisyyden kehittyminen",
-  "luottamustason funktiona, [jakaumatyyppi] residuaalit"
+  "luottamustason funktiona, [jakaumatyyppi] virhetermit"
 )
 
 plot(
